@@ -5,7 +5,7 @@ from models.models import User
 index = Blueprint('index',__name__)
 
 @index.route('/')
-@token_role_required()
+@token_role_required("admin")
 def show(current_user):
     users = User.query.all()
 

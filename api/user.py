@@ -1,4 +1,4 @@
-from flask import Blueprint, json, jsonify, request, make_response, current_app
+from flask import Blueprint, json, jsonify, request, make_response, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from models.models import User, db
@@ -46,8 +46,12 @@ def login():
         # 生成JWT
         token = jwt.encode({
             'public_id': user.public_id,
-            'exp' : datetime.utcnow() + timedelta(hours=1)
+            'exp' : current_app.config['JWT_EXPIRATION']
         }, current_app.config['SECRET_KEY'], algorithm='HS256', headers=header)
+
+        # 存入session
+        session["x-access-token"] = token
+        session["user_id"] = user.public_id
 
         return make_response(jsonify({'token' : token}), 201)
 
@@ -88,4 +92,12 @@ def signup():
     else:
         # 用户已存在返回202
         return make_response('User already exists. Please Log in.', 202)
+    
+# 注销
+@user.route('/logout', methods =['POST'])
+def logout():
+    # 清除 Flask 的 session 数据
+    session.pop('x-access-token', None)
+    session.pop('user_id', None)
+    return make_response('Successfully logout.', 201)
 
