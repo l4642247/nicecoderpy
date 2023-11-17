@@ -76,6 +76,7 @@ def save_project(current_user):
     删除项目信息
 """
 @project.route('/delete/<int:project_id>', methods=['DELETE'])
+@token_role_required("admin")
 def delete_project(project_id):
     # 获取要删除的项目
     project_to_delete = Project.query.filter_by(is_deleted=False).get(project_id)

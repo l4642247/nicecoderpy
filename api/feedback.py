@@ -44,7 +44,7 @@ def get_feedback(feedback_id = None):
     保存反馈信息
 """
 @feedback.route('/save', methods=['POST'])
-@token_role_required("admin")
+@token_role_required()
 def save_feedback(current_user):
     # 获取 JSON 数据
     feedback_data = request.get_json()
@@ -75,6 +75,7 @@ def save_feedback(current_user):
     删除反馈信息
 """
 @feedback.route('/delete/<int:feedback_id>', methods=['DELETE'])
+@token_role_required("admin")
 def delete_feedback(feedback_id):
     # 获取要删除的反馈
     feedback_to_delete = Feedback.query.filter_by(is_deleted=False).get(feedback_id)

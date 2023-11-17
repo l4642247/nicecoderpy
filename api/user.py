@@ -1,14 +1,11 @@
 from flask import Blueprint, json, jsonify, request, make_response, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
+from decorators.decorators import token_role_required
 from datetime import datetime, timedelta
 from models.models import User, db
 import jwt, uuid
 
 user = Blueprint('user',__name__)
-
-@user.route('/')
-def show():
-    return 'user api'
 
 # 用户登录
 @user.route('/login', methods =['POST'])
@@ -61,6 +58,27 @@ def login():
         403,
         {'WWW-Authenticate' : 'Basic realm ="Wrong Password !!"'}
     )
+
+
+# 修改密码
+@user.route('/change_password', methods=['POST'])
+@token_role_required()  # 保证用户已登录
+def change_password(current_user):
+    user = current_user
+
+    # 获取旧密码和新密码
+    old_password = request.json.get('old_password')
+    new_password = request.json.get('new_password')
+
+    # 验证旧密码
+    if not check_password_hash(user.password, old_password):
+        return jsonify({'error': 'Invalid old password'}), 400
+
+    # 更新密码
+    user.password = generate_password_hash(new_password)
+    db.session.commit()
+
+    return jsonify({'message': 'Password updated successfully'}), 200
 
 
 # 注册
