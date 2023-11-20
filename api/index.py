@@ -14,7 +14,7 @@ def show(current_user):
         user_data = {
             'id': user.id,
             'name': user.name,
-            'email': user.email
+            'phone': user.phone
         }
         user_list.append(user_data)
 

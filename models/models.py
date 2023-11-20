@@ -2,47 +2,52 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+"""
+    用户
+"""
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key = True, autoincrement=True)
-    public_id = db.Column(db.String(50), unique = True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100))
-    email = db.Column(db.String(70), unique = True)
+    email = db.Column(db.String(70), unique=True)
+    phone = db.Column(db.String(20), unique=True) 
     password = db.Column(db.String(200))
-    role = db.Column(db.String(10), default = 'user')
+    user_type = db.Column(db.String(10), default='customer')  # 'customer' or 'employee'
+    balance = db.Column(db.Float, default=0.0)
+    position = db.Column(db.String(255))  # Only for employee type
     creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
 
-class Project(db.Model):
-    project_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.String(255), nullable=False)
+"""
+    服务
+"""
+class Service(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text)
-    thumbnail_url = db.Column(db.String(255))
-    status = db.Column(db.Integer, default=0)
-    creator_id = db.Column(db.Integer)
     creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
-    is_deleted = db.Column(db.Boolean, default=False)
 
-class Comment(db.Model):
-    comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    project_id = db.Column(db.Integer)
-    content = db.Column(db.Text)
-    creator_id = db.Column(db.Integer)
+"""
+    预约
+"""
+class Appointment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer)
+    employee_id = db.Column(db.Integer)
+    appointment_time = db.Column(db.DateTime, nullable=False)
+    service = db.Column(db.String(255), nullable=False)
+    notes = db.Column(db.Text)
     creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
-    is_deleted = db.Column(db.Boolean, default=False)
 
-class Feedback(db.Model):
-    feedback_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    description = db.Column(db.Text)
-    technology = db.Column(db.String(255))
-    approval_status = db.Column(db.Integer, default=0)
-    creator_id = db.Column(db.Integer)
+"""
+    服务记录
+"""
+class ServiceRecord(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer)
+    employee_id = db.Column(db.Integer)
+    service_time = db.Column(db.DateTime, nullable=False)
+    service = db.Column(db.String(255), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    notes = db.Column(db.Text)
     creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
-    is_deleted = db.Column(db.Boolean, default=False)
-
-class Order(db.Model):
-    order_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    project_id = db.Column(db.Integer)
-    amount = db.Column(db.DECIMAL(10, 2))
-    payment_status = db.Column(db.Integer, default=0)
-    creator_id = db.Column(db.Integer)    
-    creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
-    is_deleted = db.Column(db.Boolean, default=False)

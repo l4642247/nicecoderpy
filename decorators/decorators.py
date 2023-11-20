@@ -24,7 +24,7 @@ def token_role_required(role = None):
                 current_user = User.query\
                     .filter_by(public_id = data['public_id'])\
                     .first()
-                if role is not None and current_user.role != role:
+                if role is not None and current_user.user_type != role:
                     return jsonify({'message' : 'Permission denied !!'}), 403
             except ExpiredSignatureError:
                 return jsonify({'message' : 'Token has expired !!'}), 401
