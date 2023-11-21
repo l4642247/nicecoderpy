@@ -64,6 +64,17 @@ def get_service_record_by_id(service_record_id=None):
         service_record_list = [service_record_to_dict(service_record) for service_record in service_records]
         return jsonify({'service_records': service_record_list})
     
+# 获取单用户所有服务项目
+@service_record.route('/user/<int:user_id>', methods=['GET'])
+def get_service_record_by_user_id(user_id=None):
+    if user_id is not None:
+        # 获取单用户所有服务项目
+        service_records = ServiceRecord.query.filter_by(customer_id = user_id).all()
+        service_record_list = [service_record_to_dict(service_record) for service_record in service_records]
+        return jsonify({'service_records': service_record_list})
+    else:
+        return jsonify({'message': 'user_id cannot be empty'}), 400
+    
 # 删除服务项目
 @service_record.route('/<int:service_record_id>', methods=['DELETE'])
 def delete_service_record(service_record_id):

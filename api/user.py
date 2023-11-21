@@ -15,7 +15,7 @@ def signup():
   
     # 获取参数
     name, phone, email= data.get('name'), data.get('phone'), data.get('email')
-    password = data.get('password')
+    password = data.get('password',"123456")
 
     # 校验入参
     if 'phone' not in data or not data['phone']:
