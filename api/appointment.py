@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from decorators.decorators import token_role_required
-from models.models import Appointment, db
+from models.models import Appointment, User, db
 from datetime import datetime
 
 appointment = Blueprint('appointment',__name__)
@@ -60,6 +60,21 @@ def get_appointment_by_id(appointment_id=None):
         appointments = Appointment.query.all()
         appointment_list = [appointment_to_dict(appointment) for appointment in appointments]
         return jsonify({'appointments': appointment_list})
+    
+# 获取单用户所有预约项目
+@appointment.route('/user/<int:user_id>', methods=['GET'])
+def get_appointment_by_user_id(user_id=None):
+    if user_id is not None:
+        user = User.query.get_or_404(user_id)
+        # 获取单用户所有服务项目
+        if user.user_type == 'customer':
+            appointments = Appointment.query.filter_by(customer_id = user_id).all()
+        elif user.user_type == 'employee':
+            appointments = Appointment.query.filter_by(employee_id = user_id).all()
+        appointment_list = [appointment_to_dict(appointment) for appointment in appointments]
+        return jsonify({'appointments': appointment_list})
+    else:
+        return jsonify({'message': 'user_id cannot be empty'}), 400
     
 # 删除预约项目
 @appointment.route('/<int:appointment_id>', methods=['DELETE'])

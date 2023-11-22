@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from decorators.decorators import token_role_required
-from models.models import ServiceRecord, db
+from models.models import ServiceRecord, User, db
 from datetime import datetime
 
 service_record = Blueprint('service_record',__name__)
@@ -68,8 +68,12 @@ def get_service_record_by_id(service_record_id=None):
 @service_record.route('/user/<int:user_id>', methods=['GET'])
 def get_service_record_by_user_id(user_id=None):
     if user_id is not None:
+        user = User.query.get_or_404(user_id)
         # 获取单用户所有服务项目
-        service_records = ServiceRecord.query.filter_by(customer_id = user_id).all()
+        if user.user_type == 'customer':
+            service_records = ServiceRecord.query.filter_by(customer_id = user_id).all()
+        elif user.user_type == 'employee':
+            service_records = ServiceRecord.query.filter_by(employee_id = user_id).all()
         service_record_list = [service_record_to_dict(service_record) for service_record in service_records]
         return jsonify({'service_records': service_record_list})
     else:

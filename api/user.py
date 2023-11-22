@@ -14,7 +14,7 @@ def signup():
     data = request.form
   
     # 获取参数
-    name, phone, email= data.get('name'), data.get('phone'), data.get('email')
+    name, phone, email, user_type= data.get('name'), data.get('phone'), data.get('email'), data.get('user_type', 'customer')
     password = data.get('password',"123456")
 
     # 校验入参
@@ -31,6 +31,7 @@ def signup():
             name = name,
             phone = phone,
             email = email,
+            user_type = user_type,
             password = generate_password_hash(password)
         )
         # 插入数据
