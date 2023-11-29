@@ -57,7 +57,7 @@ def get_appointment_by_id(appointment_id=None):
         return jsonify(appointment_to_dict(appointment))
     else:
         # 获取所有预约项目
-        appointments = Appointment.query.all()
+        appointments = Appointment.query.order_by(Appointment.creation_time.desc()).all()
         appointment_list = [appointment_to_dict(appointment) for appointment in appointments]
         return jsonify({'appointments': appointment_list})
     

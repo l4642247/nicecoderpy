@@ -60,7 +60,7 @@ def get_service_record_by_id(service_record_id=None):
         return jsonify(service_record_to_dict(service_record))
     else:
         # 获取所有服务项目
-        service_records = ServiceRecord.query.all()
+        service_records = ServiceRecord.query.order_by(ServiceRecord.creation_time.desc()).all()
         service_record_list = [service_record_to_dict(service_record) for service_record in service_records]
         return jsonify({'service_records': service_record_list})
     

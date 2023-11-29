@@ -49,10 +49,21 @@ def get_service_by_id(service_id=None):
         service = Service.query.get_or_404(service_id)
         return jsonify(service_to_dict(service))
     else:
-        # 获取所有服务项目
-        services = Service.query.all()
+        # 分页参数
+        query = Service.query
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        paginated_records = query.paginate(page=page, per_page=per_page, error_out=False)
+        # 获取分页服务项目
+        services = query.paginate(page=page, per_page=per_page, error_out=False)
         service_list = [service_to_dict(service) for service in services]
-        return jsonify({'services': service_list})
+        response = {
+            'service_list': service_list,
+            'total_pages': paginated_records.pages,
+            'current_page': paginated_records.page,
+            'total_records': paginated_records.total,
+        }
+        return jsonify(response)
     
 # 删除服务项目
 @service.route('/<int:service_id>', methods=['DELETE'])
