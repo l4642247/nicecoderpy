@@ -1,4 +1,4 @@
-from flask import Blueprint,request
+from flask import Blueprint,request,current_app
 from models.models import User, MessageLog, db
 import hashlib, xmltodict
 
@@ -20,7 +20,7 @@ def handle_text_message(msg_dict):
         log_message(msg_dict['FromUserName'], msg_dict, reply)
         return xmltodict.unparse({'xml': reply}, pretty=True)
     except Exception as e:
-        wechat.logger.error("Error handling text message: %s", e)
+        current_app.logger.error("Error handling text message: %s", e)
         return 'success'
 
 def handle_subscribe_event(msg_dict):
@@ -38,7 +38,7 @@ def handle_subscribe_event(msg_dict):
         log_message(msg_dict['FromUserName'], msg_dict, reply)
         return xmltodict.unparse({'xml': reply}, pretty=True)
     except Exception as e:
-        wechat.logger.error("Error handling subscribe event: %s", e)
+        current_app.logger.error("Error handling subscribe event: %s", e)
         return 'success'
 
 @wechat.route('/', methods=['GET', 'POST'])
@@ -61,7 +61,7 @@ def recive():
         if hashcode == signature:
             return echostr
         else:
-            wechat.error("Invalid signature")
+            current_app.error("Invalid signature")
             return 'Invalid signature', 403
     elif request.method == 'POST':
         # 处理接收到的消息
@@ -76,10 +76,10 @@ def recive():
                 if event == 'subscribe':
                     return handle_subscribe_event(msg_dict)
                 else:
-                    wechat.logger.error("Unsupported message type: %s", msg_type)
+                    current_app.logger.error("Unsupported message type: %s", msg_type)
                     return 'success'
         except Exception as e:
-            wechat.logger.error("Error handling message: %s", e)
+            current_app.logger.error("Error handling message: %s", e)
             return 'success'       
     else:
         # 处理其他类型消息
@@ -98,11 +98,11 @@ def save_user_info(openid):
 
 # 将接收到的消息和回复消息记录到数据库中
 def log_message(openid, received_msg, reply_msg):
-    MessageLog = MessageLog(
+    message_log  = MessageLog(
         openid = openid,
         received_message = received_msg['Content'],
         reply_message = reply_msg['Content']
     )
     # 插入数据
-    db.session.add(MessageLog)
+    db.session.add(message_log)
     db.session.commit()  
