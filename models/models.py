@@ -5,11 +5,13 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement=True)
     public_id = db.Column(db.String(50), unique = True)
+    openid = db.Column(db.String(100), unique=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(70), unique = True)
     password = db.Column(db.String(200))
     role = db.Column(db.String(10), default = 'user')
     creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
+    last_api_call_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
 
 class Project(db.Model):
     project_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -46,3 +48,10 @@ class Order(db.Model):
     creator_id = db.Column(db.Integer)    
     creation_time = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
     is_deleted = db.Column(db.Boolean, default=False)
+    
+class MessageLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    openid = db.Column(db.String(255), nullable=False)
+    received_message = db.Column(db.Text, nullable=False)
+    reply_message = db.Column(db.Text, nullable=False)
+    create_time = db.Column(db.TIMESTAMP, nullable=True, default=db.func.current_timestamp())
