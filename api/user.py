@@ -62,7 +62,7 @@ def login_handler(openid, content):
     user_dto = register(openid)
 
     # 3、信息保存到redis中，用于用户登录成功
-    user_dict = user.serialize(user_dto)
+    user_dict = User.serialize(user_dto)
     redis_client.set(f"Info-{content}", json.dumps(user_dict), ex=5 * 60)
 
     token = str(uuid.uuid4())
