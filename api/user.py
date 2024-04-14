@@ -66,7 +66,7 @@ def login_handler(openid, content):
     redis_client.set(f"Info-{content}", json.dumps(user_dict), ex=5 * 60)
 
     token = str(uuid.uuid4())
-    domain = "127.0.0.1"
+    domain = "http://121.43.130.247/"
     url = f"{domain}/user/autologin?token={token}"
 
     redis_client.set(f"autologin-{token}", json.dumps(user_dict), ex=48*60*60)
