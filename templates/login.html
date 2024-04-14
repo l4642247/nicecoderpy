@@ -35,8 +35,8 @@
 <script>
     var timeout = setInterval(function () {
         $.get('/user/login-check', {
-            code: '${code}',
-            ticket: '${ticket}'
+            code: '{{ code }}', 
+            ticket: '{{ ticket }}' 
         }, function (res) {
             if (res.code == 0) {
                 location.href = "/";
