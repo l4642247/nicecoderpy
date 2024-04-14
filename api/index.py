@@ -1,9 +1,7 @@
-from flask import Blueprint,jsonify
-from decorators.decorators import token_role_required
-from models.models import User
-
+from flask import Blueprint,render_template
+from models.redis_client import RedisClient
 index = Blueprint('index',__name__)
 
 @index.route('/')
-def show():
-    return jsonify({'message': 'Deployment successful!'})
+def home():
+    return render_template('home.html')

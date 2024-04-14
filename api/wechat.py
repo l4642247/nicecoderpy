@@ -1,6 +1,7 @@
 from flask import Blueprint,request,current_app
 from models.models import User, MessageLog, db
-import hashlib, xmltodict
+import hashlib, xmltodict, user
+from models.redis_client import RedisClient
 
 wechat = Blueprint('wechat',__name__)
 
@@ -9,14 +10,22 @@ TOKEN = "one"
 
 def handle_text_message(msg_dict):
     try:
+        openid = msg_dict['FromUserName']
         content = msg_dict['Content']
+        if content:
+            content = content.upper().strip()
+            if content.startswith("LT"):
+                # 交给登录处理器
+                result = user.login_handler(openid, content)
+            else:
+                result = f"You said: {content}"
         reply = {
-            'ToUserName': msg_dict['FromUserName'],
-            'FromUserName': msg_dict['ToUserName'],
-            'CreateTime': msg_dict['CreateTime'],
-            'MsgType': 'text',
-            'Content': f"You said: {content}"
-        }
+                    'ToUserName': msg_dict['FromUserName'],
+                    'FromUserName': msg_dict['ToUserName'],
+                    'CreateTime': msg_dict['CreateTime'],
+                    'MsgType': 'text',
+                    'Content': f"You said: {result}"
+                }
         log_message(msg_dict['FromUserName'], msg_dict, reply)
         return xmltodict.unparse({'xml': reply}, pretty=True)
     except Exception as e:

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <!-- 引入外部CSS文件 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signin.css') }}">
+</head>
+<body>
+<header class="p-3 mb-3 border-bottom">
+    
+</header>
+<main class="form-signin">
+    <form>
+        <h1 class="h3 mb-3 fw-normal">C.W.Y</h1>
+
+        <img src="{{ url_for('static', filename='images/cwy.jpg') }}" alt="公众号：我想和你写代码">
+        <div class="mt-2 mb-2 text-muted">
+            登录验证码：
+            <strong style="background-color: yellow; padding: 2px; font-size: 18px;" id="qrcodeeeee">
+                {{ code }}
+            </strong>
+        </div>
+        <p class="text-muted">扫码关注公众号，回复上方验证码登录</p>
+    </form>
+</main>
+<footer>
+    
+</footer>
+<!-- 引入外部JavaScript文件 -->
+<script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+<script>
+    var timeout = setInterval(function () {
+        $.get('/user/login-check', {
+            code: '${code}',
+            ticket: '${ticket}'
+        }, function (res) {
+            if (res.code == 0) {
+                location.href = "/";
+            }
+        })
+    }, 3000);
+
+    setTimeout(function () {
+        clearInterval(timeout);
+        $("#qrcodeeeee").text("验证码过期，请刷新！");
+    }, 180000)
+</script>
+</body>
+</html>

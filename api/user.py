@@ -1,15 +1,118 @@
-from flask import Blueprint, json, jsonify, request, make_response, current_app, session
+from flask import Blueprint, json, jsonify, request, make_response, current_app, session, redirect, render_template
 from werkzeug.security import generate_password_hash, check_password_hash
 from decorators.decorators import token_role_required
 from datetime import datetime, timedelta
 from models.models import User, db
-import jwt, uuid
+from models.redis_client import RedisClient
+import jwt, uuid, random, string
 
 user = Blueprint('user',__name__)
 
+
+def random_numbers(length):
+    return ''.join(random.choices(string.digits, k=length))
+
+
+def random_string(length):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+
+@user.route('/tologin', methods =['GET'])
+def tologin():
+    redis_client = RedisClient() # 在视图函数中初始化
+    code = "LT" + random_numbers(4)
+    while redis_client.exists(f"ticket-{code}"):
+        code = "LT" + random_numbers(4)
+    ticket = random_string(32)
+    
+    # 5分钟后过期
+    redis_client.set(f"ticket-{code}", ticket, ex=5 * 60)
+    
+    # 返回数据
+    return render_template('login.html', code=code, ticket=ticket)
+
+@user.route('/login-check', methods =['GET'])
+def login_check_wx():
+    redis_client = RedisClient() # 在视图函数中初始化
+    code = request.args.get('code')
+    ticket = request.args.get('ticket')
+
+    # 校验逻辑
+    if not redis_client.exists("Info-" + code):
+        return jsonify({"message": "用户未登录"}), 400
+
+    ticket_bak = redis_client.get("ticket-" + code).decode("utf-8")
+    if ticket_bak != ticket:
+        return jsonify({"message": "登录失败"}), 400
+
+    user_json = redis_client.get("Info-" + code).decode("utf-8")
+    user_dict = json.loads(user_json)
+    session['current'] = user_dict
+
+    return jsonify({"message": "登录成功"})
+
+# 微信扫码登录
+def login_handler(openid, content):
+    redis_client = RedisClient()
+    # 1、校验content的合法性
+    if len(content) != 6 or not redis_client.exists(f"ticket-{content}"):
+        return "登录验证码过期或不正确"
+
+    # 2、用户注册处理
+    user_dto = register(openid)
+
+    # 3、信息保存到redis中，用于用户登录成功
+    redis_client.set(f"Info-{content}", json.dumps(user_dto), ex=5 * 60)
+
+    token = str(uuid.uuid4())
+    domain = "127.0.0.1"
+    url = f"{domain}/autologin?token={token}"
+
+    redis_client.set(f"autologin-{token}", json.dumps(user_dto), ex=48*60*60)
+
+    return f"欢迎你！\n\n<a href='{url}'>点击这里完成登录</a>"
+
+
+# 注册
+def register(openid):
+    assert openid is not None, "不合法注册条件"
+
+    user = User.query.filter_by(openid=openid).first()
+
+    if user is None:
+        user = User()
+        user.name = "User-" + random_string(5)
+        user.creation_time = datetime.now()
+        user.openid = openid
+    else:
+        user.last_api_call_time = datetime.now()
+
+    # 插入数据
+    db.session.add(user)
+    db.session.commit()
+    
+    return user
+
+
+@user.route('/autologin', methods=['GET'])
+def autologin():
+    token = request.args.get('token')
+    redis_client = RedisClient() # 在视图函数中初始化
+    user_obj = redis_client.get(f"autologin-{token}")
+
+    if user_obj:
+        # 假设UserDto是一个字典，这里我们直接使用json.loads来解析
+        user_dto = json.loads(user_obj.decode('utf-8'))
+        # 在Flask中，你可以使用session来存储用户信息
+        session['current'] = user_dto
+        return redirect('/')
+
+    return redirect('/login')
+    
+    
 # 用户登录
 @user.route('/login', methods =['POST'])
-def login():
+def login_check_pc():
     auth = request.form
   
     # 参数校验
@@ -118,4 +221,3 @@ def logout():
     session.pop('x-access-token', None)
     session.pop('user_id', None)
     return make_response('Successfully logout.', 201)
-
