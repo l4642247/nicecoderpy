@@ -49,7 +49,7 @@ def login_check_wx():
     user_dict = json.loads(user_json)
     session['current'] = user_dict
 
-    return jsonify({"message": "登录成功"})
+    return jsonify({"code": 0,"message": "登录成功"})
 
 # 微信扫码登录
 def login_handler(openid, content):
