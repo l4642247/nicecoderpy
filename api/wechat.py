@@ -1,6 +1,7 @@
 from flask import Blueprint,request,current_app
 from models.models import User, MessageLog, db
-import hashlib, xmltodict, user
+from . import user
+import hashlib, xmltodict
 from models.redis_client import RedisClient
 
 wechat = Blueprint('wechat',__name__)
