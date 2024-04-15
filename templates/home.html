@@ -29,15 +29,12 @@
                        aria-label="Search" value="{{ q }}">
             </form>
 
-            {% if not current %}
-                <!-- 未登录 -->
-                <a class="btn btn-primary" href="user/tologin" role="button">登录</a>
-            {% else %}
-                <!-- 已登录 -->
+            {% if user_info %}
+            <!-- 已登录 -->
                 <div class="dropdown text-end">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        <span>{{ session['current'].name }}</span>
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                        <span>{{user_info.name}}</span>
                     </a>
                     <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1">
                         <li><a class="dropdown-item" href="/collect/edit">新建收藏</a></li>
@@ -48,6 +45,9 @@
                         <li><a class="dropdown-item" href="/logout">注销</a></li>
                     </ul>
                 </div>
+            {% else %}
+                <!-- 未登录 -->
+                <a class="btn btn-primary" href="user/tologin" role="button">登录</a>
             {% endif %}
         </div>
     </div>

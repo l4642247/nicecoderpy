@@ -16,6 +16,24 @@ def random_numbers(length):
 def random_string(length):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
+@user.route('/get_user_info', methods=['GET'])
+def get_user_info():
+    token = request.headers.get('Authorization').split(' ')[1] # 获取请求头中的 JWT
+    try:
+        decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        # 从 JWT 中获取用户信息
+        public_id = decoded_token['public_id']
+        current_user = User.query\
+                    .filter_by(public_id = public_id)\
+                    .first()
+        # 这里假设您从数据库或其他地方获取用户信息
+        user_info = {'user_id': current_user.id, 'name': current_user.name}
+        return jsonify(user_info)
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid token'}), 401
+
 
 @user.route('/tologin', methods =['GET'])
 def tologin():
@@ -30,6 +48,7 @@ def tologin():
     
     # 返回数据
     return render_template('login.html', code=code, ticket=ticket)
+
 
 @user.route('/login-check', methods =['GET'])
 def login_check_wx():
@@ -50,6 +69,7 @@ def login_check_wx():
     session['current'] = user_dict
 
     return jsonify({"code": 0,"message": "登录成功"})
+
 
 # 微信扫码登录
 def login_handler(openid, content):
@@ -82,6 +102,7 @@ def register(openid):
 
     if user is None:
         user = User()
+        user.public_id = str(uuid.uuid4())
         user.name = "User-" + random_string(5)
         user.creation_time = datetime.now()
         user.openid = openid
@@ -104,8 +125,25 @@ def autologin():
     if user_obj:
         # 假设UserDto是一个字典，这里我们直接使用json.loads来解析
         user_dto = json.loads(user_obj.decode('utf-8'))
+        
         # 在Flask中，你可以使用session来存储用户信息
-        session['current'] = user_dto
+        header = {
+            'alg': 'HS256',  # 使用 HMAC SHA-256 算法进行签名
+            'typ': 'JWT'
+        }
+        
+        # 生成JWT
+        token = jwt.encode({
+            'public_id': user_dto['public_id'],
+            'exp' : current_app.config['JWT_EXPIRATION']
+        }, current_app.config['SECRET_KEY'], algorithm='HS256', headers=header)
+
+        # 存入session
+        session["x-access-token"] = token
+        session["public_id"] = user_dto['public_id']
+        
+        # 用于前端取值
+        session["user_info"] = {'user_id': user_dto['id'], 'name': user_dto['name']}
         return redirect('/')
 
     return redirect('/login')
