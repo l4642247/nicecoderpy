@@ -19,6 +19,9 @@ app.register_blueprint(project,url_prefix='/project')
 app.register_blueprint(feedback,url_prefix='/feedback')
 app.register_blueprint(wechat,url_prefix='/wechat')
 
+# 会话支持
+app.secret_key = 'one'
+
 # 环境
 env = os.environ.get('FLASK_ENV', 'default')
 app.config.from_object(app_config[env])
