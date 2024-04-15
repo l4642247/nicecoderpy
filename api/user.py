@@ -86,7 +86,7 @@ def login_handler(openid, content):
     redis_client.set(f"Info-{content}", json.dumps(user_dict), ex=5 * 60)
 
     token = str(uuid.uuid4())
-    domain = "http://121.43.130.247/"
+    domain = "http://121.43.130.247"
     url = f"{domain}/user/autologin?token={token}"
 
     redis_client.set(f"autologin-{token}", json.dumps(user_dict), ex=48*60*60)
@@ -106,6 +106,7 @@ def register(openid):
         user.name = "User-" + random_string(5)
         user.creation_time = datetime.now()
         user.openid = openid
+        user.password = generate_password_hash('123456')
     else:
         user.last_api_call_time = datetime.now()
 
@@ -144,6 +145,9 @@ def autologin():
         
         # 用于前端取值
         session["user_info"] = {'user_id': user_dto['id'], 'name': user_dto['name']}
+        
+        # 打印session的值
+        current_app.logger.info(f"Session: {session}")
         return redirect('/')
 
     return redirect('/login')

@@ -52,13 +52,20 @@
         </div>
     </div>
 </header>
-<main>
+<main class="container">
     
 </main>
+
 <footer>
     
 </footer>
 <!-- 引入外部JavaScript文件 -->
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+    // 获取会话值
+    var sessionValue = JSON.parse('{{ user_info | tojson | safe }}');
+    // 打印会话值到控制台
+    console.log(sessionValue);
+</script>
 </body>
 </html>
