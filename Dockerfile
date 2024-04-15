@@ -18,7 +18,6 @@ RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 复制
 COPY requirements.txt .
-
 # 安装 Flask 和其它依赖包
 RUN pip install --no-cache-dir -r requirements.txt
 
