@@ -66,7 +66,7 @@ def login_check_wx():
 
     user_json = redis_client.get("Info-" + code).decode("utf-8")
     user_dict = json.loads(user_json)
-    session['current'] = user_dict
+    session["user_info"] = {'user_id': user_dict['id'], 'name': user_dict['name']}
 
     return jsonify({"code": 0,"message": "登录成功"})
 
