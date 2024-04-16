@@ -6,13 +6,8 @@ index = Blueprint('index',__name__)
 def home():
     return render_template('home.html')
 
-@index.route('/test')
+@index.route('/admin')
 def test():
-    # 用于前端取值
-    session["user_info"] = {'user_id': 123, 'name': 'name'}
-
-    # 打印session的值
-    current_app.logger.info(f"Session: {session}")
-    return redirect('/')
+    return render_template('admin/login.html')
 
 
