@@ -29,12 +29,12 @@
                        aria-label="Search" value="{{ q }}">
             </form>
 
-            {% if user_info %}
+            {% if 'user_info' in session %}
             <!-- 已登录 -->
                 <div class="dropdown text-end">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                        <span>{{user_info.name}}</span>
+                        <span>{{ session['user_info']['name'] }}</span>
                     </a>
                     <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1">
                         <li><a class="dropdown-item" href="/collect/edit">新建收藏</a></li>
@@ -62,10 +62,7 @@
 <!-- 引入外部JavaScript文件 -->
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script>
-    var userId = '{{ user_info.user_id }}';
-    var name = '{{ user_info.name }}';
-    console.log('User ID:', userId);
-    console.log('Name:', name);
+    
 </script>
 </body>
 </html>
