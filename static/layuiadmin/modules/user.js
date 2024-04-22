@@ -4,7 +4,7 @@
 
     i.render({
         elem: "#LAY-user-manage",
-        url: "/user/page",
+        url: "admin/user/page",
         cols: [[
             {type: 'numbers', width: 80, title: "ID"},
             {field: "username", title: "用户名", minWidth: 100},
@@ -54,3 +54,7 @@
         }
     }), e("user", {})
 });
+
+<script type="text/html" id="switchTpl">
+<input type="checkbox" lay-filter="switchStatus" id="{{d.id}}" name="status" value="{{d.status}}" lay-skin="switch" lay-text="启用|禁用" {{ d.status == 1 ? 'checked' : '' }}>
+</script>
