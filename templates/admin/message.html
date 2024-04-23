@@ -18,9 +18,9 @@
       <div class="layui-form layui-card-header layuiadmin-card-header-auto">
         <div class="layui-form-item">
           <div class="layui-inline">
-            <label class="layui-form-label align-left">邮箱</label>
+            <label class="layui-form-label">关键字</label>
             <div class="layui-input-block">
-              <input type="text" name="name" placeholder="请输入邮箱" autocomplete="off" class="layui-input">
+              <input type="text" name="name" placeholder="请输入关键字" autocomplete="off" class="layui-input">
             </div>
           </div>
           <div class="layui-inline">
@@ -32,9 +32,7 @@
       </div>
       
       <div class="layui-card-body">
-        
         <table id="list-tab" lay-filter="LAY-user-manage"></table>
-
       </div>
     </div>
   </div>
@@ -45,13 +43,6 @@
   </script>
 
   <script src="{{ url_for('static', filename='layuiadmin/layui/layui.js') }}"></script>
-  {% raw %}
-  <script type="text/html" id="dept-status">
-      <input type="checkbox" name="status" value="{{ d.id }}" lay-skin="switch" lay-text="启用|禁用"
-             lay-filter="dept-enable"
-             {{# if(d.status==1){ }} checked {{# } }}>
-  </script>
-  {% endraw %}
   <script>
     layui.config({
       base: '{{ url_for('static', filename='layuiadmin/') }}'
@@ -64,13 +55,13 @@
 
       table.render({
         elem: "#list-tab",
-        url: "user/page",
+        url: "message/page",
         cols: [[
             {field: 'id', width:50, title: 'id'},
             {field: 'openid', title: 'openid'},
-            {field: 'name', title: '名称'},
-            {field: 'email', title: '邮箱'},
-            {field: 'role', title: '角色'}]],
+            {field: 'received_message', title: '接收到的消息'},
+            {field: 'reply_message', title: '回复的消息'},
+            {field: 'create_time', title: '创建时间'}]],
         page: !0,
         limit: 30,
         height: "full-220",
