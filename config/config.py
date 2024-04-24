@@ -20,6 +20,9 @@ class Config:
 
     # SESSION
     PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
+    
+    # 文件上传路径
+    UPLOAD_FOLDER = "/path/upload/folder"
 
 app_config = {
     'development': Config,
