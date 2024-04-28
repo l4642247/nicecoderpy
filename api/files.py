@@ -5,7 +5,7 @@ import os, shutil, uuid, zipfile, threading, datetime
 files = Blueprint('files', __name__)
 
 def get_file_url(filename):
-    return f"http://localhost/files/{filename}"
+    return f"/files/{filename}"
 
 def create_upload_folder():
     if not os.path.exists(current_app.config['UPLOAD_FOLDER']):

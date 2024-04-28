@@ -29,6 +29,11 @@ def user():
 def message():
     return render_template('admin/message.html')
 
+@index.route('/admin/file')
+# @token_role_required(role='admin')
+def file():
+    return render_template('admin/file.html')
+
 @index.route('/admin/user/page')
 # @token_role_required(role='admin')
 def userPage():
@@ -37,7 +42,7 @@ def userPage():
     users = User.query.paginate(page=page, per_page=per_page, error_out=False)
     serialized_users = [user.serialize() for user in users.items]
     response_data = {"code": 0, "data": serialized_users, "count": users.total}
-    return jsonify(response_data)
+    return jsonify(response_data), 200
 
 @index.route('/admin/message/page')
 # @token_role_required(role='admin')
@@ -47,5 +52,5 @@ def messagePage():
     messages = MessageLog.query.order_by(desc(MessageLog.create_time)).paginate(page=page, per_page=per_page, error_out=False)
     serialized_messages = [message.serialize() for message in messages.items]
     response_data = {"code": 0, "data": serialized_messages, "count": messages.total}
-    return jsonify(response_data)
+    return jsonify(response_data), 200
 
