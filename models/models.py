@@ -31,7 +31,8 @@ class User(db.Model):
 class Project(db.Model):
     project_id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(255), nullable=False)
-    description = Column(Text)
+    description = Column(String(255), nullable=False)
+    content = Column(Text)
     thumbnail_url = Column(String(255))
     status = Column(Integer, default=0)
     creator_id = Column(Integer)
@@ -43,6 +44,7 @@ class Project(db.Model):
             'project_id': self.project_id,
             'title': self.title,
             'description': self.description,
+            'content': self.content,
             'thumbnail_url': self.thumbnail_url,
             'status': self.status,
             'creator_id': self.creator_id,
