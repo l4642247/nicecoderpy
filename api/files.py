@@ -1,15 +1,9 @@
 from flask import Flask, send_from_directory, request, current_app, Blueprint, jsonify, send_file
 from werkzeug.utils import secure_filename
-import os, shutil, uuid, zipfile, threading, datetime
+import os, shutil, uuid, zipfile, threading, posixpath
+from datetime import datetime
 
 files = Blueprint('files', __name__)
-
-def get_file_url(filename):
-    return f"/files/{filename}"
-
-def create_upload_folder():
-    if not os.path.exists(current_app.config['UPLOAD_FOLDER']):
-        os.makedirs(current_app.config['UPLOAD_FOLDER'])
 
 @files.route('/<path:filename>')
 def download_file(filename):
@@ -22,21 +16,50 @@ def download_file(filename):
     else:
         return 'File not found', 404
 
+# 假设 create_upload_folder 函数已经定义，用于创建上传目录
+def create_upload_folder():
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+
 @files.route('/upload', methods=['POST'])
 def upload_file():
     create_upload_folder()  # 确保上传目录存在
+
     if 'file' not in request.files:
-        return 'No file part'
+        return 'No file part', 400
     file = request.files['file']
     if file.filename == '':
-        return 'No selected file'
+        return 'No selected file', 400
+
     if file:
         filename = secure_filename(file.filename)
+        file_extension = os.path.splitext(filename)[1]  # 获取文件扩展名
+        # 获取当前日期，格式为 YYYY-MM-DD
+        current_date = datetime.utcnow().strftime('%Y-%m-%d')
+        date_folder = posixpath.join(current_app.config['UPLOAD_FOLDER'], current_date)
+        # 创建日期文件夹（如果不存在）
+        os.makedirs(date_folder, exist_ok=True)
         # 生成唯一的文件名，避免文件名冲突
-        unique_filename = str(uuid.uuid4()) + os.path.splitext(filename)[1]
-        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename))
-        file_url = get_file_url(unique_filename)
-        return jsonify({'message': 'File uploaded successfully', 'file_url': file_url})
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = posixpath.join(date_folder, unique_filename)
+        # 保存文件
+        file.save(file_path)
+        # 生成文件的 URL（根据实际情况修改）
+        file_url = get_file_url(posixpath.join(current_date, unique_filename))
+
+        return jsonify({
+            'message': 'File uploaded successfully',
+            'file_url': file_url
+        })
+
+def get_file_url(file_path):
+    # 这里需要根据您的应用配置生成文件的URL
+    # 例如，如果您的应用运行在 http://example.com，并且上传目录是 /static/uploads
+    # 您可以这样生成URL：
+    # return f"http://example.com/static/uploads/{file_path}"
+    # 这里假设 get_file_url 函数已经实现
+    return f"http://121.43.130.247/uploads/{file_path}"
 
 @files.route('/delete/<filename>', methods=['DELETE'])
 def delete_file(filename):

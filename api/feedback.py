@@ -4,21 +4,6 @@ from models.models import Feedback, db
 
 feedback = Blueprint('feedback',__name__)
 
-def feedback_to_dict(feedback):
-    """
-    将反馈对象转换为包含反馈信息的字典
-    """
-    return {
-        'feedback_id': feedback.feedback_id,
-        'description': feedback.description,
-        'technology': feedback.technology,
-        'creation_time': feedback.creation_time.strftime('%Y-%m-%d %H:%M:%S'),  # 格式化时间
-        'creator_id': feedback.creator_id,
-        'approval_status': feedback.approval_status,
-        'is_deleted': feedback.is_deleted
-}
-
-
 """
     获取反馈信息
 """
@@ -30,14 +15,14 @@ def get_feedback(feedback_id = None):
         feedback = Feedback.query.filter_by(is_deleted=False).get(feedback_id)
         if feedback:
             # 返回单个反馈的信息
-            return jsonify(feedback_to_dict(feedback)), 200
+            return jsonify(feedback.serialize()), 200
         else:
             return jsonify({'message': 'Feedback not found'}), 404
     else:
         # 查询所有反馈
         feedbacks = Feedback.query.filter_by(is_deleted=False).all()
         # 返回所有反馈的信息
-        feedback_list = [feedback_to_dict(feedback) for feedback in feedbacks]
+        feedback_list = [feedback.serialize() for feedback in feedbacks]
         return jsonify({'feedbacks': feedback_list}), 200
 
 """
