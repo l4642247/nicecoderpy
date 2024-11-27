@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Text, Float, TIMESTAMP, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 db = SQLAlchemy()
@@ -13,6 +13,7 @@ class User(db.Model):
     password = Column(String(200))
     role = Column(String(10), default='user')
     creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
     last_api_call_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
 
     def serialize(self):
@@ -25,7 +26,72 @@ class User(db.Model):
             'password': self.password,
             'role': self.role,
             'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'last_api_call_time': self.last_api_call_time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+class Product(db.Model):
+    product_id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)  # 商品名称
+    description = Column(Text, nullable=True)   # 商品描述
+    price = Column(Float, nullable=False)       # 商品价格
+    stock = Column(Integer, default=0)          # 库存数量
+    category = Column(String(100), nullable=False)  # 商品类别
+    image_url = Column(String(255), nullable=True)  # 商品图片 URL
+    status = Column(Boolean, default=True)      # 是否上架
+    creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())  # 创建时间
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    is_deleted = Column(Boolean, default=False) # 是否已删除
+
+    def serialize(self):
+        """将商品对象序列化为字典"""
+        return {
+            'product_id': self.product_id,
+            'name': self.name,
+            'description': self.description,
+            'price': self.price,
+            'stock': self.stock,
+            'category': self.category,
+            'image_url': self.image_url,
+            'status': self.status,
+            'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_deleted': self.is_deleted
+        }
+        
+class Shipment(db.Model):
+    shipment_id = Column(Integer, primary_key=True, autoincrement=True)  # 发货 ID
+    order_id = Column(Integer, nullable=False)                           # 订单 ID
+    tracking_number = Column(String(255), nullable=False, unique=True)   # 追踪单号
+    carrier = Column(String(100), nullable=False)                        # 承运商名称
+    status = Column(String(50), default='pending')                       # 发货状态（如 pending、shipped、delivered）
+    shipped_date = Column(TIMESTAMP, nullable=True)                      # 发货日期
+    delivery_date = Column(TIMESTAMP, nullable=True)                     # 预计送达日期
+    recipient_name = Column(String(255), nullable=False)                 # 收件人姓名
+    recipient_address = Column(Text, nullable=False)                     # 收件人地址
+    recipient_phone = Column(String(20), nullable=False)                 # 收件人电话
+    is_delivered = Column(Boolean, default=False)                        # 是否已送达
+    creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())  # 记录创建时间
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    is_deleted = Column(Boolean, default=False) # 是否已删除
+
+    def serialize(self):
+        """将发货对象序列化为字典"""
+        return {
+            'shipment_id': self.shipment_id,
+            'order_id': self.order_id,
+            'tracking_number': self.tracking_number,
+            'carrier': self.carrier,
+            'status': self.status,
+            'shipped_date': self.shipped_date.strftime('%Y-%m-%d %H:%M:%S') if self.shipped_date else None,
+            'delivery_date': self.delivery_date.strftime('%Y-%m-%d %H:%M:%S') if self.delivery_date else None,
+            'recipient_name': self.recipient_name,
+            'recipient_address': self.recipient_address,
+            'recipient_phone': self.recipient_phone,
+            'is_delivered': self.is_delivered,
+            'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_deleted': self.is_deleted
         }
 
 class Project(db.Model):
@@ -37,6 +103,7 @@ class Project(db.Model):
     status = Column(Integer, default=0)
     creator_id = Column(Integer)
     creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
     is_deleted = Column(Boolean, default=False)
 
     def serialize(self):
@@ -49,6 +116,7 @@ class Project(db.Model):
             'status': self.status,
             'creator_id': self.creator_id,
             'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'is_deleted': self.is_deleted
         }
 
@@ -58,6 +126,7 @@ class Comment(db.Model):
     content = Column(Text)
     creator_id = Column(Integer)
     creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
     is_deleted = Column(Boolean, default=False)
 
     def serialize(self):
@@ -67,6 +136,7 @@ class Comment(db.Model):
             'content': self.content,
             'creator_id': self.creator_id,
             'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'is_deleted': self.is_deleted
         }
 
@@ -77,6 +147,7 @@ class Feedback(db.Model):
     approval_status = Column(Integer, default=0)
     creator_id = Column(Integer)
     creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
     is_deleted = Column(Boolean, default=False)
 
     def serialize(self):
@@ -87,6 +158,7 @@ class Feedback(db.Model):
             'approval_status': self.approval_status,
             'creator_id': self.creator_id,
             'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'is_deleted': self.is_deleted
         }
 
@@ -97,6 +169,7 @@ class Order(db.Model):
     payment_status = Column(Integer, default=0)
     creator_id = Column(Integer)
     creation_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
     is_deleted = Column(Boolean, default=False)
 
     def serialize(self):
@@ -107,6 +180,7 @@ class Order(db.Model):
             'payment_status': self.payment_status,
             'creator_id': self.creator_id,
             'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'is_deleted': self.is_deleted
         }
 
@@ -133,7 +207,8 @@ class FileInfo(db.Model):
     extraction_code = Column(String(10))
     project_id = Column(Integer)
     download_count = Column(Integer, default=0)
-    creation_time = Column(TIMESTAMP, nullable=True, server_default=db.func.current_timestamp())
+    create_time = Column(TIMESTAMP, nullable=True, server_default=db.func.current_timestamp())
+    update_time = Column(TIMESTAMP, server_default=db.func.current_timestamp())
     is_deleted = Column(Boolean, nullable=True)
 
     def serialize(self):
@@ -144,6 +219,7 @@ class FileInfo(db.Model):
             'extraction_code': self.extraction_code,
             'project_id': self.project_id,
             'download_count': self.download_count,
-            'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S') if self.creation_time else None,
+            'creation_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'update_time': self.creation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'is_deleted': self.is_deleted
         }

@@ -140,7 +140,7 @@ def get_file_url(file_path):
     # 您可以这样生成URL：
     # return f"http://example.com/static/uploads/{file_path}"
     # 这里假设 get_file_url 函数已经实现
-    return f"http://121.43.130.247/uploads/{file_path}"
+    return f"http://121.43.130.247/images/{file_path}"
 
 @files.route('/delete/<filename>', methods=['DELETE'])
 def delete_file(filename):
