@@ -1,7 +1,12 @@
 from flask import Flask, send_from_directory, request, current_app, Blueprint, jsonify, send_file
 from werkzeug.utils import secure_filename
-import os, shutil, uuid, zipfile, threading, posixpath
+import os, io, shutil, uuid, zipfile, threading, posixpath
 from datetime import datetime
+from PIL import Image
+from concurrent.futures import ThreadPoolExecutor
+
+# 创建一个全局的线程池
+executor = ThreadPoolExecutor(max_workers=5)
 
 files = Blueprint('files', __name__)
 
@@ -21,6 +26,73 @@ def create_upload_folder():
     upload_folder = current_app.config['UPLOAD_FOLDER']
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
+        
+def custom_secure_filename(filename):
+    # 提取文件扩展名
+    ext = os.path.splitext(filename)[1]
+    # 保留中文及常规字符
+    base = ''.join(c for c in filename if c.isalnum() or c in (' ', '.', '_', '-'))
+    # 返回文件名，去掉不合法字符并保留原扩展名
+    return base.strip().rsplit('.', 1)[0] + ext
+
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def compress_image(file_path, max_size_mb=5, quality_step=5, min_quality=30):
+    """
+    异步压缩图片到指定大小以下，同时尽量保持图片质量。
+
+    :param file_path: 图片路径
+    :param max_size_mb: 目标最大大小（MB）
+    :param quality_step: 每次调整质量的步长
+    :param min_quality: 最低质量阈值
+    """
+    def do_compress():
+        try:
+            size_mb = os.path.getsize(file_path) / (1024 * 1024)
+            if size_mb <= max_size_mb:
+                # 如果文件已经小于等于目标大小，则不需要压缩
+                return
+
+            # 打开图片
+            with Image.open(file_path) as img:
+                img_format = img.format
+                img = img.convert('RGB')  # 转换为RGB模式，避免某些模式导致的问题
+
+                # 初始质量设置
+                quality = 95
+
+                while quality >= min_quality:
+                    # 将图片保存到内存中的字节流
+                    buffer = io.BytesIO()
+                    img.save(buffer, format=img_format, quality=quality)
+                    buffer.seek(0)
+                    size = buffer.getbuffer().nbytes / (1024 * 1024)
+
+                    if size <= max_size_mb:
+                        # 如果满足大小要求，则将压缩后的图片写入临时文件
+                        temp_file_path = f"{file_path}.tmp"
+                        with open(temp_file_path, 'wb') as f_out:
+                            f_out.write(buffer.getvalue())
+                        break
+                    else:
+                        quality -= quality_step
+
+                # 如果降低到最低质量仍大于目标大小，则保存最低质量的图片
+                if quality < min_quality:
+                    with open(file_path, 'wb') as f_out:
+                        img.save(f_out, format=img_format, quality=quality)
+
+            # 替换原始文件
+            os.replace(file_path + '.tmp', file_path)
+        except Exception as e:
+            current_app.logger.error(f'Error compressing image {file_path}: {e}')
+
+    executor.submit(do_compress)
+
 
 @files.route('/upload', methods=['POST'])
 def upload_file():
@@ -31,9 +103,13 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return 'No selected file', 400
+    # 检查文件扩展名
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Only image files (jpg, jpeg, png, gif) are allowed"}), 400
 
     if file:
-        filename = secure_filename(file.filename)
+        filename = custom_secure_filename(file.filename)
+        current_app.logger.info(f'filename: {filename}')
         file_extension = os.path.splitext(filename)[1]  # 获取文件扩展名
         # 获取当前日期，格式为 YYYY-MM-DD
         current_date = datetime.utcnow().strftime('%Y-%m-%d')
@@ -42,9 +118,14 @@ def upload_file():
         os.makedirs(date_folder, exist_ok=True)
         # 生成唯一的文件名，避免文件名冲突
         unique_filename = f"{uuid.uuid4()}{file_extension}"
+        
         file_path = posixpath.join(date_folder, unique_filename)
         # 保存文件
         file.save(file_path)
+        
+         # 压缩图片
+        compress_image(file_path)
+
         # 生成文件的 URL（根据实际情况修改）
         file_url = get_file_url(posixpath.join(current_date, unique_filename))
 
